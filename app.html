@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Read CSV file </title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.min.js"></script>
+  <style>
+    table,
+    tr {
+      border-collapse: collapse;
+      border: 1px solid black;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container" style="padding:20px 20px;">
+    <h1>Read CSV file using JavaScript</h1>
+    <div class="well">
+      <div class="row">
+        <div class="form-inline">
+          <div class="form-group">
+            <label for="files">Load a CSV formatted file:</label>
+            <input type="file" id="files" class="form-control" accept=".csv" required />
+          </div>
+          <div class="form-group">
+            <button type="submit" id="submit-file" class="btn btn-primary">Read CSV</button>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="row" id="parsed_csv_list">
+          <label id="textContent">Text file</label>
+        </div>
+        <div class="container">
+          <canvas id="myChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>
+<script type="text/javascript">
+  document.addEventListener("DOMContentLoaded", function (event) {
+    document.getElementById('submit-file').addEventListener("click", function (event) {
+      let fileInput = document.getElementById("files");
+      let file = fileInput.files[0];
+      let reader = new FileReader();
+
+      reader.onload = function (e) {
+        let results = [];
+        let contents = reader.result;
+        const contentArray = contents.split('\n');
+        contentArray.forEach(element => {
+          if (element === "") return
+          console.log(element);
+          const dataArray = element.split(',');
+          results.push({
+            id: dataArray[0],
+            hour: dataArray[1],
+            number: dataArray[2]
+          })
+        });
+        console.log('results', results);
+        //display table data
+        var table = "<table class='table'>";
+        table += "<tr><th>Id</th><th>Hour</th><th>Number</th></tr>"
+        results.forEach(element => {
+          table += "<tr>";
+
+          table += "<td>";
+          table += element.id;
+          table += "</th>";
+          table += "<td>";
+          table += element.hour;
+          table += "</th>";
+          table += "<td>";
+          table += element.number;
+          table += "</th>";
+          table += "</tr>";
+        });
+        table += "</table>";
+        document.getElementById("parsed_csv_list").innerHTML = table
+
+
+        var ctx = document.getElementById("myChart").getContext("2d");
+        ctx.canvas.parentNode.style.width = "500px";
+        ctx.canvas.parentNode.style.height = "500px";
+        let myChart = document.getElementById('myChart').getContext('2d');
+        // Global Options
+        Chart.defaults.global.defaultFontFamily = 'Lato';
+        Chart.defaults.global.defaultFontSize = 18;
+        Chart.defaults.global.defaultFontColor = '#777';
+
+        // set chart data
+        const hoursData = [];
+        const trafficData = [];
+        const colorData = [];
+        results.forEach(element => {
+          hoursData.push(element.hour);
+          trafficData.push(parseFloat(element.number));
+          colorData.push('rgba(255, 206, 86, 0.6)');
+        });
+        console.log('hoirs:', results)
+
+        let massPopChart = new Chart(myChart, {
+          type: 'bar', // bar, horizontalBar, pie, line, doughnut, radar, polarArea
+          data: {
+            labels: hoursData,
+            datasets: [{
+              label: 'Traffic FLow',
+              data: trafficData,
+              //backgroundColor:'green',
+              backgroundColor: colorData,
+              borderWidth: 1,
+              borderColor: '#777',
+              hoverBorderWidth: 3,
+              hoverBorderColor: '#000'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            title: {
+              display: true,
+              text: 'Vehicle traffic',
+              fontSize: 20,
+            },
+            scales: {
+              yAxes: [{
+                display: true,
+                ticks: {
+                  beginAtZero: true,
+                  steps: 10,
+                  max: Math.max(...trafficData) + 20
+                }
+              }]
+            },
+          }
+        });
+      };
+      reader.readAsText(file);
+
+    })
+  });
+</script>
